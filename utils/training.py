@@ -1,7 +1,4 @@
-from __future__ import generators
 import os
-
-from torch._C import _nccl_init_rank, dtype
 if os.getcwd()[-4:] != 'wgan':
     message = 'Run the file from the the root dir:\n'
     message += 'cd dc_gan\n'
@@ -12,11 +9,11 @@ import time
 import torch
 from torch.utils.tensorboard import SummaryWriter
 
-def load_tensorboard_writer(hyperparams, dataset_name, norm):
+def load_tensorboard_writer(hyperparams, dataset_name, disc_norm, gen_norm):
     tensorboard_dir = os.getcwd()+'/runs/tensorboard/'
     weights_dir = os.getcwd()+'/runs/weights/'
-    model_logs_dir = os.getcwd()+f'/runs/tensorboard/{dataset_name}_lr{hyperparams.lr}_e{hyperparams.total_epochs}_zDim{hyperparams.z_dim}_layersNorm{norm}/'
-    model_weights_dir = os.getcwd()+f'/runs/weights/{dataset_name}_lr{hyperparams.lr}_e{hyperparams.total_epochs}_zDim{hyperparams.z_dim}_layersNorm{norm}/'
+    model_logs_dir = os.getcwd()+f'/runs/tensorboard/{dataset_name}_lr{hyperparams.lr}_e{hyperparams.total_epochs}_zDim{hyperparams.z_dim}_genLayersNorm{gen_norm}_discLayersNorm{disc_norm}/'
+    model_weights_dir = os.getcwd()+f'/runs/weights/{dataset_name}_lr{hyperparams.lr}_e{hyperparams.total_epochs}_zDim{hyperparams.z_dim}_genLayersNorm{gen_norm}_discLayersNorm{disc_norm}/'
 
     if not os.path.isdir(os.getcwd()+'/runs'):
         os.mkdir(os.getcwd()+'/runs')
@@ -36,6 +33,7 @@ def train_discriminator(disc, gen, disc_opt, real_imgs, z_dim, n_critic, c_value
     batch_size = real_imgs.size()[0]
     real_disc_outputs = torch.zeros((n_critic, batch_size),dtype=torch.float32)
     fake_disc_outputs = torch.zeros((n_critic, batch_size),dtype=torch.float32)
+    losses_disc = torch.zeros((n_critic, batch_size),dtype=torch.float32)
     # The discriminator is more trained than the generator
     for i in range(n_critic):
         disc.zero_grad()
@@ -60,8 +58,9 @@ def train_discriminator(disc, gen, disc_opt, real_imgs, z_dim, n_critic, c_value
 
         real_disc_outputs[i] = real_disc_output
         fake_disc_outputs[i] = fake_disc_output
+        losses_disc[i] = loss_disc
 
-    return loss_disc, real_disc_output.mean().item(), fake_disc_output.mean().item()
+    return losses_disc.mean().item(), real_disc_outputs.mean().item(), fake_disc_outputs.mean().item()
 
 def train_generator(disc,gen,gen_opt,z_dim,batch_size,device):
     noise = torch.rand(batch_size,z_dim,1,1).to(device)

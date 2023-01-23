@@ -58,9 +58,10 @@ if __name__ == '__main__':
     print("Loading the models")
     (img_h, img_w) = img_size
     #norm = [False,False,False,False,]
-    norm = [True,True,True,True]
-    discriminator = Discriminator(DATASETS_CHS[dataparams.dataset_name],img_h,img_w,norm_layer_output=norm).to(DEVICE)
-    generator = Generator(hyperparms.z_dim, img_chs=DATASETS_CHS[dataparams.dataset_name], norm_layer_output=norm).to(DEVICE)
+    disc_norm = [False,True,True,True]
+    discriminator = Discriminator(DATASETS_CHS[dataparams.dataset_name],img_h,img_w,norm_layer_output=disc_norm).to(DEVICE)
+    gen_norm = [True,True,True,True]
+    generator = Generator(hyperparms.z_dim, img_chs=DATASETS_CHS[dataparams.dataset_name], norm_layer_output=gen_norm).to(DEVICE)
     print("\tModels loaded.")
 
     # Define optimizer and loss function
@@ -69,9 +70,10 @@ if __name__ == '__main__':
     generator_optimizer = RMSprop(generator.parameters(), hyperparms.lr)
     print("\tDone.")
 
-    writer, weigths_folder = load_tensorboard_writer(hyperparms, dataparams.dataset_name, norm)
+    writer, weigths_folder = load_tensorboard_writer(hyperparms, dataparams.dataset_name, disc_norm, gen_norm)
     total_train_baches = int(len(train_dataset) / hyperparms.batch_size)
     fixed_noise = torch.rand(hyperparms.batch_size, hyperparms.z_dim,1,1).to(DEVICE)
+    writer.add_images(f'Generated_images', generator(fixed_noise)[:16,:,:].detach().to('cpu').numpy(), 0)
     step = 0
 
     # Training loop
@@ -79,10 +81,6 @@ if __name__ == '__main__':
     for epoch in range(hyperparms.total_epochs):
 
         epoch_init_time = time.perf_counter()
-
-        with torch.no_grad():
-            test_generated_imgs = generator(fixed_noise)[:16,:,:,:].to('cpu')
-            writer.add_images(f'Generated_images', test_generated_imgs.numpy(), epoch)
 
         step = train_one_epoch(train_dataloader,discriminator,generator,discriminator_optimizer,generator_optimizer,hyperparms,epoch,total_train_baches,DEVICE,writer,step)
         epoch_exec_time = epoch_init_time - time.perf_counter()
