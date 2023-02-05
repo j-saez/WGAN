@@ -18,8 +18,10 @@ class Hyperparams():
     batch_size: int 
     lr: float 
     z_dim: int
-    clipping_val: float
     critic_iters: int
+    clip_val: float
+    gen_pretrained_weights: str
+    disc_pretrained_weights: str
 
 @dataclass
 class DatasetParams():
@@ -43,8 +45,10 @@ class Params():
             batch_size=self.args.batch_size,
             lr=self.args.learning_rate,
             z_dim=self.args.z_dim,
-            clipping_val=self.args.clip_val,
-            critic_iters=self.args.critic_iters
+            critic_iters=self.args.critic_iters,
+            clip_val=self.args.clip_val,
+            gen_pretrained_weights=self.args.gen_pretrained_weights,
+            disc_pretrained_weights=self.args.disc_pretrained_weights,
         )
         if verbose:
             print('\tHyperparams values.')
@@ -72,13 +76,15 @@ class Params():
         parser = argparse.ArgumentParser(description='Process some integers.')
 
         # Hyperparams
-        parser.add_argument( '--total_epochs',        type=int,   default=200,   help='Total epochs for the training.')
-        parser.add_argument( '--batch_size',          type=int,   default=64,    help='Batch size for the training phase.')
-        parser.add_argument( '--learning_rate',       type=float, default=5e-5,  help='Learning rate value.')
-        parser.add_argument( '--z_dim',               type=int,   default=100,   help='Noise features.')
-        parser.add_argument( '--critic_iters',        type=int,   default=5,     help='Iterations of the disc for each epoch.')
-        parser.add_argument( '--clip_val',            type=float, default=0.01,  help='Clipping values for the model weights.')
-        parser.add_argument( '--test_after_n_epochs', type=int,   default=10,    help='Test the model after n epochs of training')
+        parser.add_argument( '--total_epochs',          type=int,   default=200,     help='Total epochs for the training.')
+        parser.add_argument( '--batch_size',            type=int,   default=64,      help='Batch size for the training phase.')
+        parser.add_argument( '--learning_rate',         type=float, default=0.00005, help='Learning rate value.')
+        parser.add_argument( '--z_dim',                 type=int,   default=128,     help='Noise features.')
+        parser.add_argument( '--critic_iters',          type=int,   default=5,       help='Iterations of the disc for each epoch.')
+        parser.add_argument( '--test_after_n_epochs',   type=int,   default=10,      help='Test the model after n epochs of training')
+        parser.add_argument( '--clip_val',              type=float, default=0.01,    help='Clipping value for the model,s weights')
+        parser.add_argument( '--gen_pretrained_weights', type=str,   default=None,    help='Pathed filename to the generator pretained weigths file.')
+        parser.add_argument( '--disc_pretrained_weights',type=str,   default=None,    help='Pathed filename to the discriminator pretained weigths file.')
             
         # Dataset params
         parser.add_argument( '--dataset_path', type=str, default=os.getcwd()+'/datasets/', help='Path to the datasets folder.')
@@ -86,5 +92,3 @@ class Params():
         parser.add_argument( '--img_size',     type=int, default=64,                       help='Size for squared images.')
 
         return parser.parse_args()
-
-        return

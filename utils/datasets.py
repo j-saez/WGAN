@@ -23,11 +23,10 @@ DATASETS_PATH = os.getcwd() + '/datasets/'
 """
 def get_dataset_transforms(img_size, img_ch):
     transforms = torchvision.transforms.Compose([
-                    torchvision.transforms.Resize(img_size), 
-                    torchvision.transforms.ToTensor(), 
-                    torchvision.transforms.Normalize([0.5 for _ in range(img_ch)],[0.5 for _ in range(img_ch)] 
-                    ), 
-                ])
+        torchvision.transforms.Resize(img_size), 
+        torchvision.transforms.ToTensor(), 
+        torchvision.transforms.Normalize([0.5 for _ in range(img_ch)],[0.5 for _ in range(img_ch)]), 
+    ])
     return transforms
 
 """

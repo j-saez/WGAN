@@ -1,3 +1,4 @@
+import torch
 import torch.nn as nn
 from utils.layers import conv_block
 from utils.weights import init_weights
@@ -7,19 +8,29 @@ class Discriminator(nn.Module):
                  img_chs,
                  img_h,
                  img_w,
-                 norm_layer_output=[False,True,True,True,]):
+                 norm_layer_output=[False,True,True,True,],
+                 features=64,
+                 weights_file=None):
         super(Discriminator, self).__init__()
         self.img_h = img_h
         self.img_w = img_w
 
         self.model = nn.Sequential(
-            conv_block(img_chs, 128, kernel_size=4, stride=2, padding=0, norm=norm_layer_output[0], activation=True, discriminator=True),
-            conv_block(    128, 256, kernel_size=4, stride=2, padding=1, norm=norm_layer_output[1], activation=True, discriminator=True),
-            conv_block(    256, 512, kernel_size=4, stride=2, padding=1, norm=norm_layer_output[2], activation=True, discriminator=True),
-            conv_block(    512,1024, kernel_size=4, stride=2, padding=1, norm=norm_layer_output[3], activation=True, discriminator=True),
-            nn.Conv2d(    1024,   1, kernel_size=4, stride=2, padding=1, bias=False),
+            conv_block( img_chs,    features,   kernel_size=4, stride=2, padding=1, norm=norm_layer_output[0], activation=True, discriminator=True),
+            conv_block( features,   features*2, kernel_size=4, stride=2, padding=1, norm=norm_layer_output[1], activation=True, discriminator=True),
+            conv_block( features*2, features*4, kernel_size=4, stride=2, padding=1, norm=norm_layer_output[2], activation=True, discriminator=True),
+            conv_block( features*4, features*8, kernel_size=4, stride=2, padding=1, norm=norm_layer_output[3], activation=True, discriminator=True),
+            nn.Conv2d(  features*8, 1,          kernel_size=4, stride=2, padding=0, bias=True),
         )
-        init_weights(self.model)
+        if weights_file == None:
+            init_weights(self.model)
+        else:
+            print(f'Loading discriminator model weights from {weights_file}')
+            pretrained_dict = torch.load(weights_file)
+            print(pretrained_dict.keys())
+            pretrained_dict = {key.replace("model.", ""): value for key, value in pretrained_dict.items()}
+            print(pretrained_dict.keys())
+            self.model.load_state_dict(pretrained_dict)
         return
 
     def forward(self,x):

@@ -11,7 +11,6 @@ if os.getcwd()[-4:] != 'wgan':
 
 import time
 import torch
-import torch.nn as nn
 from utils.params                   import Params
 from utils.datasets                 import load_dataset, get_dataset_transforms
 from torch.utils.data.dataloader    import DataLoader
@@ -57,11 +56,10 @@ if __name__ == '__main__':
     # Load the model
     print("Loading the models")
     (img_h, img_w) = img_size
-    #norm = [False,False,False,False,]
     disc_norm = [False,True,True,True]
-    discriminator = Discriminator(DATASETS_CHS[dataparams.dataset_name],img_h,img_w,norm_layer_output=disc_norm).to(DEVICE)
+    discriminator = Discriminator(DATASETS_CHS[dataparams.dataset_name],img_h,img_w,norm_layer_output=disc_norm,weights_file=hyperparms.disc_pretrained_weights).to(DEVICE)
     gen_norm = [True,True,True,True]
-    generator = Generator(hyperparms.z_dim, img_chs=DATASETS_CHS[dataparams.dataset_name], norm_layer_output=gen_norm).to(DEVICE)
+    generator = Generator(hyperparms.z_dim, img_chs=DATASETS_CHS[dataparams.dataset_name], norm_layer_output=gen_norm,weights_file=hyperparms.gen_pretrained_weights).to(DEVICE)
     print("\tModels loaded.")
 
     # Define optimizer and loss function
@@ -75,6 +73,9 @@ if __name__ == '__main__':
     fixed_noise = torch.rand(hyperparms.batch_size, hyperparms.z_dim,1,1).to(DEVICE)
     writer.add_images(f'Generated_images', generator(fixed_noise)[:16,:,:].detach().to('cpu').numpy(), 0)
     step = 0
+
+    gen_epoch = int(hyperparms.gen_pretrained_weights.split('_')[-1][:-3]) if hyperparms.gen_pretrained_weights != None else 0
+    disc_epoch = int(hyperparms.disc_pretrained_weights.split('_')[-1][:-3]) if hyperparms.disc_pretrained_weights != None else 0
 
     # Training loop
     print('\n\nStart of the training process.\n')
@@ -91,6 +92,10 @@ if __name__ == '__main__':
                 test_generated_imgs = generator(fixed_noise)[:16,:,:,:].to('cpu')
                 writer.add_images(f'Generated_images', test_generated_imgs.numpy(), epoch+1)
                 step = step + 1
-                torch.save(generator.state_dict(), weigths_folder+f'Generator_epoch_{epoch}.pt')
-                torch.save(discriminator.state_dict(), weigths_folder+f'Discriminator_epoch_{epoch}.pt')
+
+                gen_epoch = epoch + 1 if hyperparms.gen_pretrained_weights == None else gen_epoch + epoch + 1
+                torch.save(generator.state_dict(), weigths_folder+f'Generator_epoch_{gen_epoch}.pt')
+
+                disc_epoch = epoch + 1 if hyperparms.disc_pretrained_weights == None else disc_epoch + epoch + 1
+                torch.save(discriminator.state_dict(), weigths_folder+f'Discriminator_epoch_{disc_epoch}.pt')
     print('Training finished.')
