@@ -50,7 +50,7 @@ This is a pytorch implementation of the paper (add link to the paper) to get a b
 
 ## Test
 
-    TODO    
+    TODO
 
 ## Results
 
