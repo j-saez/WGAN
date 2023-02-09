@@ -27,9 +27,7 @@ class Discriminator(nn.Module):
         else:
             print(f'Loading discriminator model weights from {weights_file}')
             pretrained_dict = torch.load(weights_file)
-            print(pretrained_dict.keys())
             pretrained_dict = {key.replace("model.", ""): value for key, value in pretrained_dict.items()}
-            print(pretrained_dict.keys())
             self.model.load_state_dict(pretrained_dict)
         return
 

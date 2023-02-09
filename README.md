@@ -1,6 +1,6 @@
-# WGAN Gradient Penalty pytorch implementation
+# WGAN 
 
-This is a pytorch implementation of the paper (add link to the paper) to get a better understanding of the algorithm and pytorch.
+This is a pytorch implementation of the WGAN [paper](https://arxiv.org/abs/1701.07875) to get a better understanding of the algorithm and pytorch.
 
 ## Train
 
